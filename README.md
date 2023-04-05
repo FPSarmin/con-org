@@ -33,5 +33,5 @@ ConOrg это консольный органайзер, который позв
 
 ## **UML** ##
 
-### UML Class Diagram
+### UML Диаграмма
 ![](https://github.com/MeaTael/images/blob/main/img.png)
