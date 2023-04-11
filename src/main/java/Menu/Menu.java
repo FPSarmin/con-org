@@ -1,5 +1,6 @@
 package Menu;
 
+import Manager.Contact.ContactManager;
 import Manager.Task.Task;
 import Manager.Task.TaskManager;
 import org.apache.commons.lang3.StringUtils;
@@ -10,9 +11,9 @@ import java.util.Date;
 import java.util.Scanner;
 
 public class Menu {
+    private final ContactManager cm = new ContactManager();
     private final TaskManager tm = new TaskManager();
     private final Scanner scanner = new Scanner(System.in);
-    //private final ContactManager cm = new ContactManager();
 
     public void openTaskManager() throws ParseException {
 
@@ -169,10 +170,6 @@ public class Menu {
     }
 
     public void openContactManager() {
-
-    }
-
-    public void showCalendar() {
 
     }
 }

@@ -6,8 +6,8 @@ import org.apache.commons.lang3.StringUtils;
 import java.util.*;
 
 public class TaskManager extends Manager {
-    private final Map<Integer, Task> tasks = new HashMap<Integer, Task>();
-    private final Map<Date, Set<Integer>> deadlines = new HashMap<Date, Set<Integer>>();
+    private final Map<Integer, Task> tasks = new HashMap<>();
+    private final Map<Date, Set<Integer>> deadlines = new HashMap<>();
 
     private Boolean showComplete = Boolean.TRUE;
 
