@@ -1,3 +1,5 @@
+Welcome на [wiki](https://github.com/FPSarmin/con-org/wiki)
+
 ## Консольный органайзер
   - Календарь, задачи, контакты &mdash; прямо из вашего терминала
   - Лучи добра, если поддержите стандартный формат TODO.txt для задач: http://todotxt.org/
