@@ -26,7 +26,7 @@ public class TaskManager extends Manager {
         }
         tasks.put(id, new Task(id, description, deadline, priority));
         if (!deadlines.containsKey(deadline)) {
-            deadlines.put(deadline, new HashSet<Integer>());
+            deadlines.put(deadline, new HashSet<>());
         }
         deadlines.get(deadline).add(id);
         if (numPages == 1) {

@@ -29,6 +29,6 @@ abstract public class Manager {
     }
 
     public void menuReturn() {
-        currPage = 1;
+        currPage = 0;
     }
 }

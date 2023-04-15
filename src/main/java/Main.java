@@ -13,7 +13,7 @@ public class Main {
 
         Menu menu = new Menu();
 
-        menu.openTaskManager();
+        menu.mainMenu();
         
     }
 }
