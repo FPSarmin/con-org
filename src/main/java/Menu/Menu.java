@@ -10,6 +10,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Objects;
 import java.util.Scanner;
+import java.util.concurrent.TimeUnit;
 
 public class Menu {
     private final ContactManager cm = new ContactManager();
@@ -18,7 +19,7 @@ public class Menu {
 
     private static final SimpleDateFormat FORMATTER = new SimpleDateFormat("dd-MM-yyyy HH:mm");
 
-    public void mainMenu() {
+    public void mainMenu() throws InterruptedException {
         String command;
         String menuCommands = """
                     ======================================================================
@@ -39,7 +40,7 @@ public class Menu {
         }
     }
 
-    public void openTaskManager() {
+    public void openTaskManager() throws InterruptedException {
 
 
         String command;
@@ -72,7 +73,7 @@ public class Menu {
         }
     }
 
-    public void addTask() {
+    public void addTask() throws InterruptedException {
         clearScreen();
         System.out.print("Enter description: ");
         String description = scanner.nextLine();
@@ -81,7 +82,7 @@ public class Menu {
         int priority = Integer.parseInt(scanner.nextLine());
         tm.addTask(description, deadline, priority);
         System.out.println("Task added");
-        scanner.nextLine();
+        Thread.sleep(2 * 1000); // Wait for 2 seconds
     }
     public void editTask() {
         clearScreen();
