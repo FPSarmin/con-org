@@ -23,8 +23,8 @@ public class Menu {
         String command;
         String menuCommands = """
                     ======================================================================
-                    == Available commands:                                     TaskMenu ==
-                    ==                                                      ContactMenu ==
+                    == Available commands:                                   1.TaskMenu ==
+                    ==                                                    2.ContactMenu ==
                     ======================================================================
                     """;
         while (true) {
@@ -32,8 +32,8 @@ public class Menu {
             System.out.println(menuCommands);
             command = scanner.nextLine();
             switch (command) {
-                case "TaskMenu" -> openTaskManager();
-                case "ContactMenu" -> openContactManager();
+                case "1" -> openTaskManager();
+                case "2" -> openContactManager();
                 default -> System.out.println("Unknown command");
             }
 
@@ -47,26 +47,26 @@ public class Menu {
         while (true) {
             clearScreen();
             String menuCommands = """
-                    ======================================================================
-                    == Available commands:       showAll, showByDate, addTask, editTask ==
-                    ==                                removeTask, toggleCompleteDisplay ==
-                    ==                           nextPage, editPageSize, prevPage, menu ==
+                    ==============================================================================
+                    == Available commands:       1.showAll, 2.showByDate, 3.addTask, 4.editTask ==
+                    ==                                5.removeTask, 6.toggleCompleteDisplay ==
+                    ==                           7.nextPage, 8.editPageSize, 9.prevPage, 10.menu ==
                     ======================================================================
                     """;
             System.out.print(menuCommands);
-            if ((command = scanner.nextLine()).equals("menu")) {
+            if ((command = scanner.nextLine()).equals("10")) {
                 return;
             }
             switch (command) {
-                case "addTask" -> addTask();
-                case "editTask" -> editTask();
-                case "removeTask" -> removeTask();
-                case "toggleCompleteDisplay" -> toggleCompleteDisplay();
-                case "nextPage" -> tm.nextPage();
-                case "prevPage" -> tm.prevPage();
-                case "editPageSize" -> editPageSize();
-                case "showAll" -> showAll("tasks");
-                case "showByDate" -> tm.showByDate(editDeadline());
+                case "3" -> addTask();
+                case "4" -> editTask();
+                case "5" -> removeTask();
+                case "6" -> toggleCompleteDisplay();
+                case "7" -> tm.nextPage();
+                case "9" -> tm.prevPage();
+                case "8" -> editPageSize();
+                case "1" -> showAll("tasks");
+                case "2" -> tm.showByDate(editDeadline());
                 default -> System.out.println("Unknown command");
             }
             tm.menuReturn();
@@ -91,32 +91,32 @@ public class Menu {
         Task currTask = tm.selectTask(id);
 
         String editCommands = """
-                ======================================================================
-                == Available commands:  editDescription, editDeadline, editPriority ==
-                ==                                       setComplete, setIncomplete ==
-                ======================================================================
+                ============================================================================
+                == Available commands:  1.editDescription, 2.editDeadline, 3.editPriority ==
+                ==                                         4.setComplete, 5.setIncomplete ==
+                ============================================================================
                 """;
         System.out.print(editCommands);
         String ecommand = scanner.nextLine();
         System.out.println(ecommand);
 
         switch (ecommand) {
-            case "setComplete" -> {
+            case "4" -> {
                 tm.markComplete(id);
             }
-            case "setIncomplete" -> {
+            case "5" -> {
                 tm.markIncomplete(id);
             }
-            case "editDescription" -> {
+            case "1" -> {
                 System.out.print("Enter new description: ");
                 String newDesc = scanner.nextLine();
                 currTask.setDescription(newDesc);
             }
-            case "editDeadline" -> {
+            case "2" -> {
                 currTask.setDeadline(editDeadline());
                 System.out.print("Enter priority: ");
             }
-            case "editPriority" -> {
+            case "3" -> {
                 int newPriority = Integer.parseInt(scanner.nextLine());
                 currTask.setPriority(newPriority);
             }
