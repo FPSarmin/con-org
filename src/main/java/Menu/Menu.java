@@ -133,6 +133,7 @@ public class Menu {
     }
 
     private void removeTask() {
+        tm.updateParams();
         clearScreen();
         System.out.print("Enter task id: ");
         int rmid = Integer.parseInt(scanner.nextLine());

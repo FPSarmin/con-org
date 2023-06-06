@@ -18,6 +18,20 @@ public class Task {
         this.priority = priority;
     }
 
+    public Task(String description, Date deadline, int priority) {
+        this.description = description;
+        this.deadline = deadline;
+        this.priority = priority;
+    }
+
+    public Task(int id, String description, Date deadline, boolean complete, int priority) {
+        this.id = id;
+        this.description = description;
+        this.deadline = deadline;
+        this.priority = priority;
+        this.complete = complete;
+    }
+
     public int getId() {
         return id;
     }

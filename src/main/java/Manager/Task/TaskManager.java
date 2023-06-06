@@ -2,7 +2,14 @@ package Manager.Task;
 
 import Manager.Manager;
 import org.apache.commons.lang3.StringUtils;
+import org.sqlite.JDBC;
 
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.*;
 
 public class TaskManager extends Manager {
@@ -20,21 +27,44 @@ public class TaskManager extends Manager {
     }
 
     public void addTask(String description, Date deadline, int priority) throws ArithmeticException {
-        int id = tasks.size();
-        if (id == Integer.MAX_VALUE) {
-            throw new ArithmeticException("Max contacts reached");
+        try {
+            DbHandler dbHandler = DbHandler.getInstance();
+            dbHandler.addTask(new Task(description, deadline, priority));
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
-        tasks.put(id, new Task(id, description, deadline, priority));
-        if (!deadlines.containsKey(deadline)) {
-            deadlines.put(deadline, new HashSet<>());
+    }
+
+    public void updateParams() {
+        List<Task> tasksFromDb = new ArrayList<>();
+        try {
+            DbHandler dbHandler = DbHandler.getInstance();
+            tasksFromDb = dbHandler.getAllTasks();
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
-        deadlines.get(deadline).add(id);
-        if (numPages == 1) {
-            ++pageSize;
+        for (Task task: tasksFromDb) {
+            if (task.getId() == Integer.MAX_VALUE) {
+                throw new ArithmeticException("Max contacts reached");
+            }
+            tasks.put(task.getId(), task);
+            if (!deadlines.containsKey(task.getDeadline())) {
+                deadlines.put(task.getDeadline(), new HashSet<>());
+            }
+            deadlines.get(task.getDeadline()).add(task.getId());
+            if (numPages == 1) {
+                ++pageSize;
+            }
         }
     }
 
     public void removeTask(int id) {
+        try {
+            DbHandler dbHandler = DbHandler.getInstance();
+            dbHandler.deleteTask(id);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
         deadlines.get(tasks.get(id).getDeadline()).remove(id);
         if (tasks.get(id).isComplete()) {
             --numComplete;
@@ -67,6 +97,7 @@ public class TaskManager extends Manager {
     }
 
     public void showTasks() {
+        updateParams();
         if (tasks.size() - (showComplete ? 0 : 1) * numComplete == 0) {
             System.out.println("No tasks scheduled yet (or probably complete tasks display is toggled OFF)");
             return;
@@ -103,6 +134,7 @@ public class TaskManager extends Manager {
     }
 
     public void showByDate(Date date) {
+        updateParams();
         int end = deadlines.get(date).size();
         if (end - (showComplete ? 0 : 1) * numComplete == 0) {
             System.out.println("No tasks scheduled yet (or probably complete tasks display is toggled OFF)");
@@ -127,6 +159,87 @@ public class TaskManager extends Manager {
             }
             currTask.display();
             System.out.println(StringUtils.repeat("#", 70));
+        }
+    }
+    public static class DbHandler {
+
+        // Константа, в которой хранится адрес подключения
+        private static final String CON_STR = "jdbc:sqlite:conOrg.db";
+
+        // Используем шаблон одиночка, чтобы не плодить множество
+        // экземпляров класса DbHandler
+        private static DbHandler instance = null;
+
+        public static synchronized DbHandler getInstance() throws SQLException {
+            if (instance == null)
+                instance = new DbHandler();
+            return instance;
+        }
+
+        private final Connection connection;
+
+        private DbHandler() throws SQLException {
+            DriverManager.registerDriver(new JDBC());
+            this.connection = DriverManager.getConnection(CON_STR);
+            CreateDB();
+        }
+
+        public List<Task> getAllTasks() {
+            try (Statement statement = this.connection.createStatement()) {
+                List<Task> tasks = new ArrayList<>();
+                ResultSet resultSet = statement.executeQuery("SELECT id, description, deadline, complete, priority FROM Tasks");
+                while (resultSet.next()) {
+                    tasks.add(new Task(resultSet.getInt("id"),
+                            resultSet.getString("description"),
+                            resultSet.getDate("deadline"),
+                            resultSet.getBoolean("complete"),
+                            resultSet.getInt("priority")
+                    ));
+                }
+                // Возвращаем наш список
+                return tasks;
+
+            } catch (SQLException e) {
+                e.printStackTrace();
+                // Если произошла ошибка - возвращаем пустую коллекцию
+                return Collections.emptyList();
+            }
+        }
+
+        public void CreateDB() {
+            try (Statement statement = this.connection.createStatement()) {
+                statement.execute("CREATE TABLE if not exists 'Tasks' ('id' INTEGER PRIMARY KEY AUTOINCREMENT, 'description' text, 'deadline' DATE, 'complete' BOOLEAN, 'priority' INTEGER);");
+            }
+            catch (SQLException e) {
+                e.printStackTrace();
+                // Если произошла ошибка - возвращаем пустую коллекцию
+            }
+        }
+
+        // Добавление продукта в БД
+        public void addTask(Task task) {
+            // Создадим подготовленное выражение, чтобы избежать SQL-инъекций
+            try (PreparedStatement statement = this.connection.prepareStatement(
+                    "INSERT INTO Tasks('description', 'deadline', 'complete', 'priority') " +
+                            "VALUES(?, ?, ?, ?)")) {
+                statement.setObject(1, task.getDescription());
+                statement.setObject(2, task.getDeadline());
+                statement.setObject(3, task.isComplete());
+                statement.setObject(4, task.getPriority());
+                statement.execute();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+
+        public void deleteTask(int id) {
+            try (PreparedStatement statement = this.connection.prepareStatement(
+                    "DELETE FROM Tasks WHERE id = ?")) {
+                statement.setObject(1, id);
+                statement.execute();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
         }
     }
 }
