@@ -30,8 +30,19 @@ public class TaskManager extends Manager {
         try {
             DbHandler dbHandler = DbHandler.getInstance();
             dbHandler.addTask(new Task(description, deadline, priority));
+            updateParams();
         } catch (SQLException e) {
             e.printStackTrace();
+        }
+    }
+
+    public Task getTask(int id) {
+        try {
+            DbHandler dbHandler = DbHandler.getInstance();
+            return dbHandler.getTask(id);
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+            return null;
         }
     }
 
@@ -65,7 +76,8 @@ public class TaskManager extends Manager {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        deadlines.get(tasks.get(id).getDeadline()).remove(id);
+        updateParams();
+        //deadlines.get(tasks.get(id).getDeadline()).remove(id);
         if (tasks.get(id).isComplete()) {
             --numComplete;
         }
@@ -97,7 +109,6 @@ public class TaskManager extends Manager {
     }
 
     public void showTasks() {
-        updateParams();
         if (tasks.size() - (showComplete ? 0 : 1) * numComplete == 0) {
             System.out.println("No tasks scheduled yet (or probably complete tasks display is toggled OFF)");
             return;
@@ -134,7 +145,6 @@ public class TaskManager extends Manager {
     }
 
     public void showByDate(Date date) {
-        updateParams();
         int end = deadlines.get(date).size();
         if (end - (showComplete ? 0 : 1) * numComplete == 0) {
             System.out.println("No tasks scheduled yet (or probably complete tasks display is toggled OFF)");
@@ -182,6 +192,29 @@ public class TaskManager extends Manager {
             DriverManager.registerDriver(new JDBC());
             this.connection = DriverManager.getConnection(CON_STR);
             CreateDB();
+        }
+
+        public Task getTask(int id) throws SQLException {
+            try (PreparedStatement statement = this.connection.prepareStatement(
+                    "SELECT description, deadline, complete, priority FROM Tasks WHERE id = ?")) {
+                statement.setObject(1, id);
+                ResultSet resultSet = statement.executeQuery();
+                if (!resultSet.next()) {
+                    return null;
+                }
+                String description = resultSet.getString("description");
+                Date date = resultSet.getDate("deadline");
+                boolean complete = resultSet.getBoolean("complete");
+                int priority = resultSet.getInt("priority");
+                Task task = new Task(id, description, date, priority);
+                if (complete) {
+                    task.setComplete();
+                }
+                return task;
+            } catch (SQLException e) {
+                e.printStackTrace();
+                throw new SQLException("Id out of bounds");
+            }
         }
 
         public List<Task> getAllTasks() {

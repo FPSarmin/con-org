@@ -7,6 +7,18 @@ abstract public class Manager {
 
     public abstract void setPageSize(int size);
 
+    public int getNumPages() {
+        return numPages;
+    }
+
+    public int getPageSize() {
+        return pageSize;
+    }
+
+    public int getCurrPage() {
+        return currPage;
+    }
+
     public void nextPage() throws IndexOutOfBoundsException {
         if (currPage + 1 == numPages) {
             throw new IndexOutOfBoundsException();

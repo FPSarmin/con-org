@@ -8,9 +8,7 @@ import org.apache.commons.lang3.StringUtils;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Objects;
 import java.util.Scanner;
-import java.util.concurrent.TimeUnit;
 
 public class Menu {
     private final ContactManager cm = new ContactManager();
@@ -58,15 +56,15 @@ public class Menu {
                 return;
             }
             switch (command) {
+                case "1" -> showAll("tasks");
+                case "2" -> tm.showByDate(editDeadline());
                 case "3" -> addTask();
                 case "4" -> editTask();
                 case "5" -> removeTask();
                 case "6" -> toggleCompleteDisplay();
                 case "7" -> tm.nextPage();
-                case "9" -> tm.prevPage();
                 case "8" -> editPageSize();
-                case "1" -> showAll("tasks");
-                case "2" -> tm.showByDate(editDeadline());
+                case "9" -> tm.prevPage();
                 default -> System.out.println("Unknown command");
             }
             tm.menuReturn();
@@ -101,12 +99,6 @@ public class Menu {
         System.out.println(ecommand);
 
         switch (ecommand) {
-            case "4" -> {
-                tm.markComplete(id);
-            }
-            case "5" -> {
-                tm.markIncomplete(id);
-            }
             case "1" -> {
                 System.out.print("Enter new description: ");
                 String newDesc = scanner.nextLine();
@@ -120,6 +112,8 @@ public class Menu {
                 int newPriority = Integer.parseInt(scanner.nextLine());
                 currTask.setPriority(newPriority);
             }
+            case "4" -> tm.markComplete(id);
+            case "5" -> tm.markIncomplete(id);
 
             default -> {
                 System.out.println("Unknown command");

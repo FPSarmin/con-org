@@ -28,7 +28,18 @@ public class ContactManager extends Manager {
         }
     }
 
+    public Contact getContact(int id) {
+        return contacts.get(id);
+    }
+
+    public Contact getContactByName(String name) {
+        return contacts.get(namesToIds.get(name));
+    }
+
     public void removeContact(int id) {
+        if (!contacts.containsKey(id)) {
+            return;
+        }
         namesToIds.remove(contacts.get(id).getName());
         contacts.remove(id);
         if (numPages == 1) {
@@ -37,11 +48,21 @@ public class ContactManager extends Manager {
     }
 
     public void removeContactByName(String name) {
+        if (!namesToIds.containsKey(name)) {
+            return;
+        }
+        if (numPages == 1) {
+            setPageSize(getPageSize() - 1);
+        } else if (getSize() % numPages == 1) {
+            numPages -= 1;
+            prevPage();
+        }
         contacts.remove(namesToIds.get(name));
         namesToIds.remove(name);
-        if (numPages == 1) {
-            --pageSize;
-        }
+    }
+
+    public int getSize() {
+        return contacts.size();
     }
 
     public void showContacts() {
