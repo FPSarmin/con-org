@@ -49,9 +49,9 @@ public class Menu {
             String menuCommands = """
                     ==============================================================================
                     == Available commands:       1.showAll, 2.showByDate, 3.addTask, 4.editTask ==
-                    ==                                5.removeTask, 6.toggleCompleteDisplay ==
-                    ==                           7.nextPage, 8.editPageSize, 9.prevPage, 10.menu ==
-                    ======================================================================
+                    ==                                    5.removeTask, 6.toggleCompleteDisplay ==
+                    ==                          7.nextPage, 8.editPageSize, 9.prevPage, 10.menu ==
+                    ==============================================================================
                     """;
             System.out.print(menuCommands);
             if ((command = scanner.nextLine()).equals("10")) {
