@@ -14,6 +14,13 @@ import java.util.*;
 
 public class TaskManager extends Manager {
 
+    private String dbName;
+    public TaskManager() {
+        this.dbName = "jdbc:sqlite:conOrg.db";
+    }
+    public TaskManager(String dbName) {
+        this.dbName = dbName;
+    }
     private Boolean showComplete = Boolean.TRUE;
 
     private int numComplete = 0;
@@ -134,7 +141,7 @@ public class TaskManager extends Manager {
     public void showByDate(Date date) {
         Map<Integer, Task> tasks;
         try {
-            tasks = DbHandler.getInstance().getAllTasksByDate(date);
+            tasks = DbHandler.getInstanceWithName(this.dbName).getAllTasksByDate(date);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -174,6 +181,12 @@ public class TaskManager extends Manager {
             return instance;
         }
 
+        public static synchronized DbHandler getInstanceWithName(String dbName) throws SQLException {
+            if (instance == null)
+                instance = new DbHandler(dbName);
+            return instance;
+        }
+
         private final Connection connection;
 
         private DbHandler() throws SQLException {
@@ -182,6 +195,11 @@ public class TaskManager extends Manager {
             CreateDB();
         }
 
+        private DbHandler(String dbName) throws SQLException {
+            DriverManager.registerDriver(new JDBC());
+            this.connection = DriverManager.getConnection(dbName);
+            CreateDB();
+        }
         public Task getTask(int id) throws SQLException {
             try (PreparedStatement statement = this.connection.prepareStatement(
                     "SELECT id, description, deadline, complete, priority FROM Tasks WHERE id = ?")) {
@@ -208,7 +226,7 @@ public class TaskManager extends Manager {
                     "UPDATE Tasks SET complete=? WHERE id = ?")) {
                 statement.setObject(1, isComplete);
                 statement.setObject(2, id);
-                ResultSet resultSet = statement.executeQuery();
+                statement.executeQuery();
             } catch (SQLException e) {
                 e.printStackTrace();
             }

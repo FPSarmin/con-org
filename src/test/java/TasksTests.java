@@ -59,7 +59,7 @@ public class TasksTests {
         assertFalse(task.isComplete());
     }
 
-    TaskManager tm = new TaskManager();
+    TaskManager tm = new TaskManager("jdbc:sqlite:TestConOrg.db");
 
     @Test
     @DisplayName("Test AddTask and GetTask methods")
