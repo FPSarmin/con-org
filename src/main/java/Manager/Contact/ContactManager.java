@@ -27,28 +27,32 @@ public class ContactManager extends Manager {
 
     public ContactManager() {
         this.dbName = "jdbc:sqlite:conOrg.db";
+        pageSize = getSize();
     }
     public ContactManager(String dbName) {
         this.dbName = dbName;
+        pageSize = getSize();
     }
 
     @Override
     public void setPageSize(int size) {
         pageSize = size;
-        Map<Integer, Task> contacts;
-        try {
-            contacts = TaskManager.DbHandler.getInstanceWithName(this.dbName).getAllTasks();
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-        numPages = contacts.size() / size + (contacts.size() % size == 0 ? 0 : 1);
+        int numTasks = getSize();
+        numPages = numTasks / size + (numTasks % size == 0 ? 0 : 1);
     }
+
     public void addContact(String name, String phoneNumber, String email, String address) throws ArithmeticException {
         try {
             DbHandler dbHandler = DbHandler.getInstanceWithName(this.dbName);
             dbHandler.addContact(new Contact(name, phoneNumber, email, address));
         } catch (SQLException e) {
             e.printStackTrace();
+        }
+        int numContacts = getSize();
+        if (numPages == 1) {
+            ++pageSize;
+        } else if (numContacts % pageSize == 1) {
+            ++numPages;
         }
     }
 
@@ -79,8 +83,14 @@ public class ContactManager extends Manager {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+        int numContacts = getSize();
         if (numPages == 1) {
             --pageSize;
+        } else if (numContacts % pageSize == 0) {
+            --numPages;
+            if (currPage == numPages) {
+                prevPage();
+            }
         }
     }
 
@@ -102,11 +112,11 @@ public class ContactManager extends Manager {
     public int getSize() {
         Map<Integer, Contact> contacts;
         try {
-            contacts = DbHandler.getInstanceWithName(this.dbName).getAllContacts();
+            return DbHandler.getInstanceWithName(this.dbName).getSize();
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            e.printStackTrace();
+            return 0;
         }
-        return contacts.size();
     }
 
     public void showContacts() {
@@ -271,6 +281,16 @@ public class ContactManager extends Manager {
                 statement.execute();
             } catch (SQLException e) {
                 e.printStackTrace();
+            }
+        }
+
+        public int getSize() {
+            try (Statement statement = this.connection.createStatement()) {
+                ResultSet result = statement.executeQuery("SELECT count(*) FROM Contacts");
+                return result.getInt(1);
+            } catch (SQLException e) {
+                e.printStackTrace();
+                return 0;
             }
         }
     }

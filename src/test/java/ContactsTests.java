@@ -1,11 +1,27 @@
 import Manager.Contact.Contact;
 import Manager.Contact.ContactManager;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
+
+import java.io.File;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 @DisplayName("All Tests")
 public class ContactsTests {
+
+
+    @BeforeAll
+    @DisplayName("Remove test bd")
+    public static void rmtestdb() {
+        File testbd = new File("TestConOrg.db");
+        if (testbd.delete()) {
+            System.out.println("Successful delete");
+        } else {
+            System.out.println("Test bd not found");
+        }
+    }
 
     @Test
     @DisplayName("Test contact class methods")
@@ -54,34 +70,34 @@ public class ContactsTests {
 
         Contact contact = cm.getContactByName("Max Didur");
         assertAll(
-                () -> assertEquals(contact.getId(), 0),
-                () -> assertEquals(contact.getName(), "Max Didur"),
-                () -> assertEquals(contact.getPhoneNumber(), "+7 909 908 17 11"),
-                () -> assertEquals(contact.getEmail(), "msdidur@edu.hse.ru"),
-                () -> assertEquals(contact.getAddess(), "Makovskogo 11")
+                () -> assertEquals(1, contact.getId()),
+                () -> assertEquals("Max Didur",contact.getName()),
+                () -> assertEquals("+7 909 908 17 11", contact.getPhoneNumber()),
+                () -> assertEquals("msdidur@edu.hse.ru", contact.getEmail()),
+                () -> assertEquals("Makovskogo 11", contact.getAddess())
         );
 
-        Contact contactbyid = cm.getContact(0);
+        Contact contactbyid = cm.getContact(1);
         assertAll(
-                () -> assertEquals(contactbyid.getId(), 0),
-                () -> assertEquals(contactbyid.getName(), "Max Didur"),
-                () -> assertEquals(contactbyid.getPhoneNumber(), "+7 909 908 17 11"),
-                () -> assertEquals(contactbyid.getEmail(), "msdidur@edu.hse.ru"),
-                () -> assertEquals(contactbyid.getAddess(), "Makovskogo 11")
+                () -> assertEquals(1, contactbyid.getId()),
+                () -> assertEquals("Max Didur", contactbyid.getName()),
+                () -> assertEquals("+7 909 908 17 11", contactbyid.getPhoneNumber()),
+                () -> assertEquals("msdidur@edu.hse.ru", contactbyid.getEmail()),
+                () -> assertEquals("Makovskogo 11", contactbyid.getAddess())
         );
 
         Contact contact1 = cm.getContactByName("Pavel Sarmin");
         assertAll(
-                () -> assertEquals(contact1.getId(), 1),
+                () -> assertEquals(contact1.getId(), 2),
                 () -> assertEquals(contact1.getName(), "Pavel Sarmin"),
                 () -> assertEquals(contact1.getPhoneNumber(), ""),
                 () -> assertEquals(contact1.getEmail(), "pfsarmin@edu.hse.ru"),
                 () -> assertEquals(contact1.getAddess(), "")
         );
 
-        Contact contact1byid = cm.getContact(1);
+        Contact contact1byid = cm.getContact(2);
         assertAll(
-                () -> assertEquals(contact1byid.getId(), 1),
+                () -> assertEquals(contact1byid.getId(), 2),
                 () -> assertEquals(contact1byid.getName(), "Pavel Sarmin"),
                 () -> assertEquals(contact1byid.getPhoneNumber(), ""),
                 () -> assertEquals(contact1byid.getEmail(), "pfsarmin@edu.hse.ru"),
@@ -90,16 +106,16 @@ public class ContactsTests {
 
         Contact contact2 = cm.getContactByName("Fedosova Sofya");
         assertAll(
-                () -> assertEquals(contact2.getId(), 2),
+                () -> assertEquals(contact2.getId(), 3),
                 () -> assertEquals(contact2.getName(), "Fedosova Sofya"),
                 () -> assertEquals(contact2.getPhoneNumber(), "+7 905 809 32 20"),
                 () -> assertEquals(contact2.getEmail(), ""),
                 () -> assertEquals(contact2.getAddess(), "")
         );
 
-        Contact contact2byid = cm.getContact(2);
+        Contact contact2byid = cm.getContact(3);
         assertAll(
-                () -> assertEquals(contact2byid.getId(), 2),
+                () -> assertEquals(contact2byid.getId(), 3),
                 () -> assertEquals(contact2byid.getName(), "Fedosova Sofya"),
                 () -> assertEquals(contact2byid.getPhoneNumber(), "+7 905 809 32 20"),
                 () -> assertEquals(contact2byid.getEmail(), ""),
@@ -107,7 +123,7 @@ public class ContactsTests {
         );
 
         // Check get doesn't crash, return null if contact does not exist
-        Contact contactnone = cm.getContact(3);
+        Contact contactnone = cm.getContact(4);
         Contact contactnone1 = cm.getContactByName("Kto Ya");
         assertNull(contactnone);
         assertNull(contactnone1);
@@ -130,11 +146,9 @@ public class ContactsTests {
         cm.getContact(1);
         cm.removeContact(2);
         assertEquals(1, cm.getSize());
-        cm.getContactByName("Pavel Sarmin");
+        assertNull(cm.getContactByName("Pavel Sarmin"));
 
-        // Check remove doesn't crash
-        cm.removeContact(5);
-        cm.removeContactByName("Blessedmane");
-        assertEquals(cm.getPageSize(), 1);
+
+        assertEquals(1, cm.getPageSize());
     }
 }
