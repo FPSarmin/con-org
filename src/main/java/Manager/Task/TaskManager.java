@@ -184,21 +184,19 @@ public class TaskManager extends Manager {
 
         public Task getTask(int id) throws SQLException {
             try (PreparedStatement statement = this.connection.prepareStatement(
-                    "SELECT description, deadline, complete, priority FROM Tasks WHERE id = ?")) {
+                    "SELECT id, description, deadline, complete, priority FROM Tasks WHERE id = ?")) {
                 statement.setObject(1, id);
                 ResultSet resultSet = statement.executeQuery();
                 if (!resultSet.next()) {
                     return null;
                 }
-                String description = resultSet.getString("description");
-                Date date = resultSet.getDate("deadline");
-                boolean complete = resultSet.getBoolean("complete");
-                int priority = resultSet.getInt("priority");
-                Task task = new Task(id, description, date, priority);
-                if (complete) {
-                    task.setComplete();
-                }
-                return task;
+                return new Task(
+                        resultSet.getInt("id"),
+                        resultSet.getString("description"),
+                        resultSet.getDate("deadline"),
+                        resultSet.getBoolean("complete"),
+                        resultSet.getInt("priority")
+                );
             } catch (SQLException e) {
                 e.printStackTrace();
                 throw new SQLException("Id out of bounds");

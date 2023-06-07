@@ -14,70 +14,99 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static java.util.Objects.isNull;
+
 public class ContactManager extends Manager {
-    private Map<Integer, Contact> contacts = new HashMap<>();
-    private Map<String, Integer> namesToIds = new HashMap<>();
 
     @Override
     public void setPageSize(int size) {
         pageSize = size;
+        Map<Integer, Task> contacts;
+        try {
+            contacts = TaskManager.DbHandler.getInstance().getAllTasks();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
         numPages = contacts.size() / size + (contacts.size() % size == 0 ? 0 : 1);
     }
     public void addContact(String name, String phoneNumber, String email, String address) throws ArithmeticException {
-        int id = contacts.size();
-        if (id == Integer.MAX_VALUE) {
-            throw new ArithmeticException("Max contacts reached");
-        }
-        Contact contact = new Contact(id, name, phoneNumber, email, address);
-        contacts.put(id, contact);
-        namesToIds.put(name, id);
-        if (numPages == 1) {
-            ++pageSize;
+        try {
+            DbHandler dbHandler = DbHandler.getInstance();
+            dbHandler.addContact(new Contact(name, phoneNumber, email, address));
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
     }
 
     public Contact getContact(int id) {
-        return contacts.get(id);
+        try {
+            DbHandler dbHandler = DbHandler.getInstance();
+            return dbHandler.getContact(id);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     public Contact getContactByName(String name) {
-        return contacts.get(namesToIds.get(name));
+        try {
+            DbHandler dbHandler = DbHandler.getInstance();
+            return dbHandler.getContactByName(name);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     public void removeContact(int id) {
-        if (!contacts.containsKey(id)) {
-            return;
+        try {
+            DbHandler dbHandler = DbHandler.getInstance();
+            dbHandler.deleteContact(id);
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
-        namesToIds.remove(contacts.get(id).getName());
-        contacts.remove(id);
         if (numPages == 1) {
             --pageSize;
         }
     }
 
     public void removeContactByName(String name) {
-        if (!namesToIds.containsKey(name)) {
-            return;
-        }
         if (numPages == 1) {
             setPageSize(getPageSize() - 1);
         } else if (getSize() % numPages == 1) {
             numPages -= 1;
             prevPage();
         }
-        contacts.remove(namesToIds.get(name));
-        namesToIds.remove(name);
+        try {
+            DbHandler dbHandler = DbHandler.getInstance();
+            dbHandler.deleteContactByName(name);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     public int getSize() {
+        Map<Integer, Task> contacts;
+        try {
+            contacts = TaskManager.DbHandler.getInstance().getAllTasks();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
         return contacts.size();
     }
 
     public void showContacts() {
+        Map<Integer, Contact> contacts;
+        try {
+            contacts = DbHandler.getInstance().getAllContacts();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
         Integer[] keys = new Integer[contacts.size()];
         contacts.keySet().toArray(keys);
         int start = currPage * pageSize;
@@ -112,12 +141,52 @@ public class ContactManager extends Manager {
             CreateDB();
         }
 
-        public List<Contact> getAllContacts() {
+        public Contact getContact(int id) throws SQLException {
+            try (PreparedStatement statement = this.connection.prepareStatement(
+                    "SELECT id, name, phoneNumber, email, address FROM Contacts WHERE id = ?")) {
+                statement.setObject(1, id);
+                ResultSet resultSet = statement.executeQuery();
+                if (!resultSet.next()) {
+                    return null;
+                }
+                return new Contact(resultSet.getInt("id"),
+                        resultSet.getString("name"),
+                        resultSet.getString("phoneNumber"),
+                        resultSet.getString("email"),
+                        resultSet.getString("address"));
+            } catch (SQLException e) {
+                e.printStackTrace();
+                throw new SQLException("Id out of bounds");
+            }
+        }
+
+        public Contact getContactByName(String name) throws SQLException {
+            try (PreparedStatement statement = this.connection.prepareStatement(
+                    "SELECT id, name, phoneNumber, email, address FROM Contacts WHERE name = ?")) {
+                statement.setObject(1, name);
+                ResultSet resultSet = statement.executeQuery();
+                if (!resultSet.next()) {
+                    return null;
+                }
+                return new Contact(resultSet.getInt("id"),
+                        resultSet.getString("name"),
+                        resultSet.getString("phoneNumber"),
+                        resultSet.getString("email"),
+                        resultSet.getString("address"));
+            } catch (SQLException e) {
+                e.printStackTrace();
+                throw new SQLException("Id out of bounds");
+            }
+        }
+
+        public Map<Integer, Contact> getAllContacts() {
             try (Statement statement = this.connection.createStatement()) {
-                List<Contact> contacts = new ArrayList<>();
-                ResultSet resultSet = statement.executeQuery("SELECT name, phoneNumber, email, address FROM Contacts");
+                Map<Integer, Contact> contacts = new HashMap<>();
+                ResultSet resultSet = statement.executeQuery("SELECT id, name, phoneNumber, email, address FROM Contacts");
                 while (resultSet.next()) {
-                    contacts.add(new Contact(resultSet.getInt("id"),
+                    int id = resultSet.getInt("id");
+                    contacts.put(id,
+                            new Contact(id,
                             resultSet.getString("name"),
                             resultSet.getString("phoneNumber"),
                             resultSet.getString("email"),
@@ -130,7 +199,7 @@ public class ContactManager extends Manager {
             } catch (SQLException e) {
                 e.printStackTrace();
                 // Если произошла ошибка - возвращаем пустую коллекцию
-                return Collections.emptyList();
+                return Collections.emptyMap();
             }
         }
 
@@ -145,11 +214,15 @@ public class ContactManager extends Manager {
         }
 
         // Добавление продукта в БД
-        public void addTask(Contact contact) {
+        public void addContact(Contact contact) {
             // Создадим подготовленное выражение, чтобы избежать SQL-инъекций
             try (PreparedStatement statement = this.connection.prepareStatement(
                     "INSERT INTO Contacts('name', 'phoneNumber', 'email', 'address') " +
                             "VALUES(?, ?, ?, ?)")) {
+                if (!isNull(getContactByName(contact.getName()))) {
+                    throw new RuntimeException("Contact is already exists");
+                }
+
                 statement.setObject(1, contact.getName());
                 statement.setObject(2, contact.getPhoneNumber());
                 statement.setObject(3, contact.getEmail());
@@ -164,6 +237,16 @@ public class ContactManager extends Manager {
             try (PreparedStatement statement = this.connection.prepareStatement(
                     "DELETE FROM Contacts WHERE id = ?")) {
                 statement.setObject(1, id);
+                statement.execute();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+
+        public void deleteContactByName(String name) {
+            try (PreparedStatement statement = this.connection.prepareStatement(
+                    "DELETE FROM Contacts WHERE name = ?")) {
+                statement.setObject(1, name);
                 statement.execute();
             } catch (SQLException e) {
                 e.printStackTrace();

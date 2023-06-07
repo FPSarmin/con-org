@@ -17,6 +17,13 @@ public class Contact {
         this.address = address;
     }
 
+    public Contact(String name, String phoneNumber, String email, String address) throws IllegalArgumentException {
+        this.name = name;
+        this.phoneNumber = phoneNumber;
+        this.email = email;
+        this.address = address;
+    }
+
     public int getId() {
         return id;
     }
