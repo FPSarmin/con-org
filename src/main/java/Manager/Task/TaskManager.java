@@ -224,9 +224,9 @@ public class TaskManager extends Manager {
         public void setComplete(int id, boolean isComplete) {
             try (PreparedStatement statement = this.connection.prepareStatement(
                     "UPDATE Tasks SET complete=? WHERE id = ?")) {
-                statement.setObject(1, isComplete);
-                statement.setObject(2, id);
-                statement.executeQuery();
+                statement.setBoolean(1, isComplete);
+                statement.setInt(2, id);
+                statement.executeUpdate();
             } catch (SQLException e) {
                 e.printStackTrace();
             }
