@@ -263,7 +263,7 @@ public class TaskManager extends Manager {
                             new Task(
                                     resultSet.getInt("id"),
                                     resultSet.getString("description"),
-                                    resultSet.getDate("deadline"),
+                                    resultSet.getTimestamp("deadline"),
                                     resultSet.getBoolean("complete"),
                                     resultSet.getInt("priority")
                     ));
@@ -278,8 +278,10 @@ public class TaskManager extends Manager {
 
         public Map<Integer, Task> getAllTasksByDate(Date date) {
             try (PreparedStatement statement = this.connection.prepareStatement(
-                    "SELECT id, description, deadline, complete, priority FROM Tasks WHERE deadline=?")) {
-                statement.setObject(1, date);
+                    "SELECT id, description, deadline, complete, priority FROM Tasks " +
+                            "WHERE deadline>= ? AND deadline < ?")) {
+                statement.setTimestamp(1, new java.sql.Timestamp(date.getTime()));
+                statement.setTimestamp(2, new java.sql.Timestamp(date.getTime() + 24L*60*60*60*1000));
                 Map<Integer, Task> tasks = new HashMap<>();
                 ResultSet resultSet = statement.executeQuery();
                 while (resultSet.next()) {
@@ -287,7 +289,7 @@ public class TaskManager extends Manager {
                             new Task(
                                     resultSet.getInt("id"),
                                     resultSet.getString("description"),
-                                    resultSet.getDate("deadline"),
+                                    resultSet.getTimestamp("deadline"),
                                     resultSet.getBoolean("complete"),
                                     resultSet.getInt("priority")
                             ));
@@ -302,7 +304,7 @@ public class TaskManager extends Manager {
 
         public void CreateDB() {
             try (Statement statement = this.connection.createStatement()) {
-                statement.execute("CREATE TABLE if not exists 'Tasks' ('id' INTEGER PRIMARY KEY AUTOINCREMENT, 'description' text, 'deadline' DATE, 'complete' BOOLEAN, 'priority' INTEGER);");
+                statement.execute("CREATE TABLE if not exists 'Tasks' ('id' INTEGER PRIMARY KEY AUTOINCREMENT, 'description' text, 'deadline' Timestamp, 'complete' BOOLEAN, 'priority' INTEGER);");
             }
             catch (SQLException e) {
                 e.printStackTrace();

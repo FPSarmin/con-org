@@ -16,6 +16,7 @@ public class Menu {
     private final Scanner scanner = new Scanner(System.in);
 
     private static final SimpleDateFormat FORMATTER = new SimpleDateFormat("dd-MM-yyyy HH:mm");
+    private static final SimpleDateFormat FORMATTER_ONLY_DATE = new SimpleDateFormat("dd-MM-yyyy");
 
     public void mainMenu() throws InterruptedException {
         String command;
@@ -57,7 +58,7 @@ public class Menu {
             }
             switch (command) {
                 case "1" -> showAll("tasks");
-                case "2" -> tm.showByDate(editDeadline());
+                case "2" -> tm.showByDate(editDeadline(FORMATTER_ONLY_DATE));
                 case "3" -> addTask();
                 case "4" -> editTask();
                 case "5" -> removeTask();
@@ -75,7 +76,7 @@ public class Menu {
         clearScreen();
         System.out.print("Enter description: ");
         String description = scanner.nextLine();
-        Date deadline = editDeadline();
+        Date deadline = editDeadline(FORMATTER);
         System.out.print("Enter priority: ");
         int priority = Integer.parseInt(scanner.nextLine());
         tm.addTask(description, deadline, priority);
@@ -105,7 +106,7 @@ public class Menu {
                 currTask.setDescription(newDesc);
             }
             case "2" -> {
-                currTask.setDeadline(editDeadline());
+                currTask.setDeadline(editDeadline(FORMATTER));
                 System.out.print("Enter priority: ");
             }
             case "3" -> {
@@ -136,13 +137,13 @@ public class Menu {
         scanner.nextLine();
     }
 
-    private Date editDeadline() {
+    private Date editDeadline(SimpleDateFormat format) {
         clearScreen();
         while (true) {
             try {
-                System.out.print("Enter date in format dd-MM-yyyy HH:mm: ");
+                System.out.print("Enter date in format " + format.toPattern() + " :");
                 String newDatestr = scanner.nextLine();
-                return(FORMATTER.parse(newDatestr));
+                return(format.parse(newDatestr));
             } catch (ParseException e) {
                 System.out.println("Incorrect date type");
             }
