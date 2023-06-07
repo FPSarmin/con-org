@@ -17,9 +17,11 @@ public class TaskManager extends Manager {
     private String dbName;
     public TaskManager() {
         this.dbName = "jdbc:sqlite:conOrg.db";
+        pageSize = getSize();
     }
     public TaskManager(String dbName) {
         this.dbName = dbName;
+        pageSize = getSize();
     }
     private Boolean showComplete = Boolean.TRUE;
 
@@ -28,13 +30,8 @@ public class TaskManager extends Manager {
     @Override
     public void setPageSize(int size) {
         pageSize = size;
-        Map<Integer, Task> tasks;
-        try {
-            tasks = DbHandler.getInstanceWithName(this.dbName).getAllTasks();
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-        numPages = tasks.size() / size + (tasks.size() % size == 0 ? 0 : 1);
+        int numTasks = getSize();
+        numPages = numTasks / size + (numTasks % size == 0 ? 0 : 1);
     }
 
     public void addTask(String description, Date deadline, int priority) throws ArithmeticException {
@@ -43,6 +40,22 @@ public class TaskManager extends Manager {
             dbHandler.addTask(new Task(description, deadline, priority));
         } catch (SQLException e) {
             e.printStackTrace();
+        }
+        int numTasks = getSize();
+        if (numPages == 1) {
+            ++pageSize;
+        } else if ((numTasks % pageSize == 1) || (pageSize == 1)) {
+            ++numPages;
+        }
+    }
+
+    public int getSize() {
+        try {
+            DbHandler dbHandler = DbHandler.getInstanceWithName(this.dbName);
+            return dbHandler.getSize();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return 0;
         }
     }
 
@@ -62,6 +75,15 @@ public class TaskManager extends Manager {
             dbHandler.deleteTask(id);
         } catch (SQLException e) {
             e.printStackTrace();
+        }
+        int numTasks = getSize();
+        if (numPages == 1) {
+            --pageSize;
+        } else if (numTasks % pageSize == 0) {
+            --numPages;
+            if (currPage == numPages) {
+                prevPage();
+            }
         }
     }
     public Task selectTask(int id) {
@@ -311,6 +333,16 @@ public class TaskManager extends Manager {
                 statement.execute();
             } catch (SQLException e) {
                 e.printStackTrace();
+            }
+        }
+
+        public int getSize() {
+            try (Statement statement = this.connection.createStatement()) {
+                ResultSet result = statement.executeQuery("SELECT count(*) FROM Tasks");
+                return result.getInt(1);
+            } catch (SQLException e) {
+                e.printStackTrace();
+                return 0;
             }
         }
     }

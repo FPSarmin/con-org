@@ -1,37 +1,45 @@
 import Manager.Task.Task;
 import Manager.Task.TaskManager;
-import org.junit.Test;
 
+import java.io.File;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 @DisplayName("All tests")
 public class TasksTests {
 
+    @BeforeAll
+    @DisplayName("Remove test bd")
+    public static void rmtestdb() {
+        File testbd = new File("TestConOrg.db");
+        if (testbd.delete()) {
+            System.out.println("Successful delete");
+        } else {
+            System.out.println("Test bd not found");
+        }
+    }
+
     SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy HH:mm");
 
     @Test
     @DisplayName("Test task class methods")
-    public void TaskMethodsTest() {
-
+    public void TaskMethodsTests() {
 
         int id = 0;
-        boolean exception = false;
         String description = "Write tests for java project";
         Date date;
         try {
             date = formatter.parse("06-06-2023 18:10");
         } catch (ParseException e) {
-            date = new Date();
-            exception = true;
+            date = null;
         }
         int priority = 1;
-        assertFalse(exception);
+        assertNotNull(date);
 
         Task task = new Task(id, description, date, priority);
         // Check getters
@@ -46,9 +54,9 @@ public class TasksTests {
         try {
             date = formatter.parse("07-06-2023 18:10");
         } catch (ParseException e) {
-            exception = true;
+            date = null;
         }
-        assertFalse(exception);
+        assertNotNull(date);
         task.setDeadline(date);
         assertEquals(task.getDeadline(), new Date(1686064200000L + 24L*60L*60L*1000L));
         task.setPriority(2);
@@ -66,8 +74,11 @@ public class TasksTests {
     public void AddTasks() {
         Task task = tm.getTask(1);
         assertNull(task);
+        assertEquals(0, tm.getSize());
         tm.addTask("Write tests for java project", new Date(1686064200000L), 1);
+        assertEquals(1, tm.getSize());
         tm.addTask("NIS", new Date(1686064200000L + 24L*60L*60L*1000L), 2);
+        assertEquals(2, tm.getSize());
         task = tm.getTask(1);
         Task finalTask = task;
         assertAll(
@@ -118,6 +129,38 @@ public class TasksTests {
     }
 
     @Test
+    @DisplayName("Test interaction with pages")
+    public void TestPages() {
+        // Check initials
+        assertEquals(1, tm.getNumPages());
+        assertEquals(0, tm.getCurrPage());
+        assertEquals(2, tm.getPageSize());
+
+        // Check size changes on add in case numPages == 1
+        tm.addTask("Minor", new Date(1686064200000L + 24L*60L*60L*1000L*2L), 3);
+        assertEquals(3, tm.getSize());
+
+        // Check setPageSize changes pageSize correctly
+        tm.setPageSize(2);
+        assertEquals(2, tm.getNumPages());
+        assertEquals(2, tm.getPageSize());
+        assertEquals(0, tm.getCurrPage());
+
+        // Check nextPage
+        tm.nextPage();
+        assertEquals(1, tm.getCurrPage());
+
+        // Check if last page is clear it is removed
+        tm.removeTask(3);
+        assertEquals(1, tm.getNumPages());
+        assertEquals(2, tm.getPageSize());
+
+        // Check if last page is removed user currPage is not out of bounds
+        assertEquals(0, tm.getCurrPage());
+
+    }
+
+    @Test
     @DisplayName("Test RemoveTask and GetTask methods")
     public void RemoveTasks() {
         tm.removeTask(2);
@@ -128,6 +171,11 @@ public class TasksTests {
         tm.removeTask(1);
         task = tm.getTask(1);
         assertNull(task);
+
+        // Just to check page values to go initial on empty tasks
+        assertEquals(1, tm.getNumPages());
+        assertEquals(0, tm.getCurrPage());
+        assertEquals(0, tm.getPageSize());
     }
 
 }
