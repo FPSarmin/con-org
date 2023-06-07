@@ -13,8 +13,6 @@ import java.sql.Statement;
 import java.util.*;
 
 public class TaskManager extends Manager {
-    private final Map<Integer, Task> tasks = new HashMap<>();
-    private final Map<Date, Set<Integer>> deadlines = new HashMap<>();
 
     private Boolean showComplete = Boolean.TRUE;
 
@@ -23,6 +21,12 @@ public class TaskManager extends Manager {
     @Override
     public void setPageSize(int size) {
         pageSize = size;
+        Map<Integer, Task> tasks;
+        try {
+            tasks = DbHandler.getInstance().getAllTasks();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
         numPages = tasks.size() / size + (tasks.size() % size == 0 ? 0 : 1);
     }
 
@@ -30,7 +34,6 @@ public class TaskManager extends Manager {
         try {
             DbHandler dbHandler = DbHandler.getInstance();
             dbHandler.addTask(new Task(description, deadline, priority));
-            updateParams();
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -46,29 +49,6 @@ public class TaskManager extends Manager {
         }
     }
 
-    public void updateParams() {
-        List<Task> tasksFromDb = new ArrayList<>();
-        try {
-            DbHandler dbHandler = DbHandler.getInstance();
-            tasksFromDb = dbHandler.getAllTasks();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        for (Task task: tasksFromDb) {
-            if (task.getId() == Integer.MAX_VALUE) {
-                throw new ArithmeticException("Max contacts reached");
-            }
-            tasks.put(task.getId(), task);
-            if (!deadlines.containsKey(task.getDeadline())) {
-                deadlines.put(task.getDeadline(), new HashSet<>());
-            }
-            deadlines.get(task.getDeadline()).add(task.getId());
-            if (numPages == 1) {
-                ++pageSize;
-            }
-        }
-    }
-
     public void removeTask(int id) {
         try {
             DbHandler dbHandler = DbHandler.getInstance();
@@ -76,27 +56,28 @@ public class TaskManager extends Manager {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        updateParams();
-        //deadlines.get(tasks.get(id).getDeadline()).remove(id);
-        if (tasks.get(id).isComplete()) {
-            --numComplete;
-        }
-        tasks.remove(id);
-        if (numPages == 1) {
-            --pageSize;
-        }
     }
     public Task selectTask(int id) {
-        return tasks.get(id);
+        return getTask(id);
     }
 
     public void markComplete(int id) {
-        tasks.get(id).setComplete();
+        try {
+            DbHandler dbHandler = DbHandler.getInstance();
+            dbHandler.setComplete(id, true);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
         ++numComplete;
     }
 
     public void markIncomplete(int id) {
-        tasks.get(id).setIncomplete();
+        try {
+            DbHandler dbHandler = DbHandler.getInstance();
+            dbHandler.setComplete(id, false);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
         --numComplete;
     }
 
@@ -109,6 +90,12 @@ public class TaskManager extends Manager {
     }
 
     public void showTasks() {
+        Map<Integer, Task> tasks;
+        try {
+            tasks = DbHandler.getInstance().getAllTasks();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
         if (tasks.size() - (showComplete ? 0 : 1) * numComplete == 0) {
             System.out.println("No tasks scheduled yet (or probably complete tasks display is toggled OFF)");
             return;
@@ -145,20 +132,21 @@ public class TaskManager extends Manager {
     }
 
     public void showByDate(Date date) {
-        int end = deadlines.get(date).size();
+        Map<Integer, Task> tasks;
+        try {
+            tasks = DbHandler.getInstance().getAllTasksByDate(date);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        int end = tasks.size();
         if (end - (showComplete ? 0 : 1) * numComplete == 0) {
             System.out.println("No tasks scheduled yet (or probably complete tasks display is toggled OFF)");
             return;
         }
         Integer[] ids = new Integer[end];
-        deadlines.get(date).toArray(ids);
-        Arrays.sort(ids, (fst, snd) -> {
-            int priorityDiff = tasks.get(fst).getPriority() - tasks.get(snd).getPriority();
-            if (priorityDiff != 0) {
-                return priorityDiff;
-            }
-            return tasks.get(fst).getDescription().compareTo(tasks.get(snd).getDescription());
-        });
+        tasks.keySet().toArray(ids);
+        Arrays.sort(ids, Comparator.comparingInt((Integer fst) -> tasks.get(fst).getPriority())
+                .thenComparing(fst -> tasks.get(fst).getDescription()));
         for (int i = 0; i < end; ++i) {
             if (i == 0) {
                 System.out.println(StringUtils.repeat("#", 70));
@@ -217,25 +205,60 @@ public class TaskManager extends Manager {
             }
         }
 
-        public List<Task> getAllTasks() {
+        public void setComplete(int id, boolean isComplete) {
+            try (PreparedStatement statement = this.connection.prepareStatement(
+                    "UPDATE Tasks SET complete=? WHERE id = ?")) {
+                statement.setObject(1, isComplete);
+                statement.setObject(2, id);
+                ResultSet resultSet = statement.executeQuery();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+
+        public Map<Integer, Task> getAllTasks() {
             try (Statement statement = this.connection.createStatement()) {
-                List<Task> tasks = new ArrayList<>();
+                Map<Integer, Task> tasks = new HashMap<>();
                 ResultSet resultSet = statement.executeQuery("SELECT id, description, deadline, complete, priority FROM Tasks");
                 while (resultSet.next()) {
-                    tasks.add(new Task(resultSet.getInt("id"),
-                            resultSet.getString("description"),
-                            resultSet.getDate("deadline"),
-                            resultSet.getBoolean("complete"),
-                            resultSet.getInt("priority")
+                    tasks.put(resultSet.getInt("id"),
+                            new Task(
+                                    resultSet.getInt("id"),
+                                    resultSet.getString("description"),
+                                    resultSet.getDate("deadline"),
+                                    resultSet.getBoolean("complete"),
+                                    resultSet.getInt("priority")
                     ));
                 }
-                // Возвращаем наш список
                 return tasks;
 
             } catch (SQLException e) {
                 e.printStackTrace();
-                // Если произошла ошибка - возвращаем пустую коллекцию
-                return Collections.emptyList();
+                return Collections.emptyMap();
+            }
+        }
+
+        public Map<Integer, Task> getAllTasksByDate(Date date) {
+            try (PreparedStatement statement = this.connection.prepareStatement(
+                    "SELECT id, description, deadline, complete, priority FROM Tasks WHERE deadline=?")) {
+                statement.setObject(1, date);
+                Map<Integer, Task> tasks = new HashMap<>();
+                ResultSet resultSet = statement.executeQuery();
+                while (resultSet.next()) {
+                    tasks.put(resultSet.getInt("id"),
+                            new Task(
+                                    resultSet.getInt("id"),
+                                    resultSet.getString("description"),
+                                    resultSet.getDate("deadline"),
+                                    resultSet.getBoolean("complete"),
+                                    resultSet.getInt("priority")
+                            ));
+                }
+                return tasks;
+
+            } catch (SQLException e) {
+                e.printStackTrace();
+                return Collections.emptyMap();
             }
         }
 

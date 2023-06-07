@@ -1,9 +1,21 @@
 package Manager.Contact;
 
 import Manager.Manager;
+import Manager.Task.Task;
+import Manager.Task.TaskManager;
 import org.apache.commons.lang3.StringUtils;
+import org.sqlite.JDBC;
 
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class ContactManager extends Manager {
@@ -77,5 +89,85 @@ public class ContactManager extends Manager {
             }
         }
     }
+    public static class DbHandler {
 
+        // Константа, в которой хранится адрес подключения
+        private static final String CON_STR = "jdbc:sqlite:conOrg.db";
+
+        // Используем шаблон одиночка, чтобы не плодить множество
+        // экземпляров класса DbHandler
+        private static DbHandler instance = null;
+
+        public static synchronized DbHandler getInstance() throws SQLException {
+            if (instance == null)
+                instance = new DbHandler();
+            return instance;
+        }
+
+        private final Connection connection;
+
+        private DbHandler() throws SQLException {
+            DriverManager.registerDriver(new JDBC());
+            this.connection = DriverManager.getConnection(CON_STR);
+            CreateDB();
+        }
+
+        public List<Contact> getAllContacts() {
+            try (Statement statement = this.connection.createStatement()) {
+                List<Contact> contacts = new ArrayList<>();
+                ResultSet resultSet = statement.executeQuery("SELECT name, phoneNumber, email, address FROM Contacts");
+                while (resultSet.next()) {
+                    contacts.add(new Contact(resultSet.getInt("id"),
+                            resultSet.getString("name"),
+                            resultSet.getString("phoneNumber"),
+                            resultSet.getString("email"),
+                            resultSet.getString("address")
+                    ));
+                }
+                // Возвращаем наш список
+                return contacts;
+
+            } catch (SQLException e) {
+                e.printStackTrace();
+                // Если произошла ошибка - возвращаем пустую коллекцию
+                return Collections.emptyList();
+            }
+        }
+
+        public void CreateDB() {
+            try (Statement statement = this.connection.createStatement()) {
+                statement.execute("CREATE TABLE if not exists 'Contacts' ('id' INTEGER PRIMARY KEY AUTOINCREMENT, 'name' text, 'phoneNumber' text, 'email' text, 'address' text);");
+            }
+            catch (SQLException e) {
+                e.printStackTrace();
+                // Если произошла ошибка - возвращаем пустую коллекцию
+            }
+        }
+
+        // Добавление продукта в БД
+        public void addTask(Contact contact) {
+            // Создадим подготовленное выражение, чтобы избежать SQL-инъекций
+            try (PreparedStatement statement = this.connection.prepareStatement(
+                    "INSERT INTO Contacts('name', 'phoneNumber', 'email', 'address') " +
+                            "VALUES(?, ?, ?, ?)")) {
+                statement.setObject(1, contact.getName());
+                statement.setObject(2, contact.getPhoneNumber());
+                statement.setObject(3, contact.getEmail());
+                statement.setObject(4, contact.getAddess());
+                statement.execute();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+
+        public void deleteContact(int id) {
+            try (PreparedStatement statement = this.connection.prepareStatement(
+                    "DELETE FROM Contacts WHERE id = ?")) {
+                statement.setObject(1, id);
+                statement.execute();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 }

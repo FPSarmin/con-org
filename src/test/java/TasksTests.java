@@ -41,8 +41,6 @@ public class TasksTests {
         assertFalse(task.isComplete());
         assertEquals(task.getPriority(), 1);
         // Check setters
-        task.setId(1);
-        assertEquals(task.getId(), 1);
         task.setDescription("NIS");
         assertEquals(task.getDescription(), "NIS");
         try {
