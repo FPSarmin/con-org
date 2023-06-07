@@ -21,7 +21,7 @@ abstract public class Manager {
 
     public void nextPage() throws IndexOutOfBoundsException {
         if (currPage + 1 == numPages) {
-            throw new IndexOutOfBoundsException();
+            return;
         }
         ++currPage;
     }
@@ -35,7 +35,7 @@ abstract public class Manager {
 
     public void prevPage() throws IndexOutOfBoundsException {
         if (currPage == 0) {
-            throw new IndexOutOfBoundsException();
+            return;
         }
         --currPage;
     }
