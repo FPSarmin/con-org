@@ -37,7 +37,7 @@ public class ContactsTests {
 
     }
 
-    ContactManager cm = new ContactManager();
+    ContactManager cm = new ContactManager("jdbc:sqlite:TestConOrg.db");
 
     @Test
     @DisplayName("Test Contact Manager")

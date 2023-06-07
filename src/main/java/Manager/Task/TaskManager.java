@@ -30,7 +30,7 @@ public class TaskManager extends Manager {
         pageSize = size;
         Map<Integer, Task> tasks;
         try {
-            tasks = DbHandler.getInstance().getAllTasks();
+            tasks = DbHandler.getInstanceWithName(this.dbName).getAllTasks();
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -39,7 +39,7 @@ public class TaskManager extends Manager {
 
     public void addTask(String description, Date deadline, int priority) throws ArithmeticException {
         try {
-            DbHandler dbHandler = DbHandler.getInstance();
+            DbHandler dbHandler = DbHandler.getInstanceWithName(this.dbName);
             dbHandler.addTask(new Task(description, deadline, priority));
         } catch (SQLException e) {
             e.printStackTrace();
@@ -48,7 +48,7 @@ public class TaskManager extends Manager {
 
     public Task getTask(int id) {
         try {
-            DbHandler dbHandler = DbHandler.getInstance();
+            DbHandler dbHandler = DbHandler.getInstanceWithName(this.dbName);
             return dbHandler.getTask(id);
         } catch (SQLException e) {
             System.out.println(e.getMessage());
@@ -58,7 +58,7 @@ public class TaskManager extends Manager {
 
     public void removeTask(int id) {
         try {
-            DbHandler dbHandler = DbHandler.getInstance();
+            DbHandler dbHandler = DbHandler.getInstanceWithName(this.dbName);
             dbHandler.deleteTask(id);
         } catch (SQLException e) {
             e.printStackTrace();
@@ -70,7 +70,7 @@ public class TaskManager extends Manager {
 
     public void markComplete(int id) {
         try {
-            DbHandler dbHandler = DbHandler.getInstance();
+            DbHandler dbHandler = DbHandler.getInstanceWithName(this.dbName);
             dbHandler.setComplete(id, true);
         } catch (SQLException e) {
             e.printStackTrace();
@@ -80,7 +80,7 @@ public class TaskManager extends Manager {
 
     public void markIncomplete(int id) {
         try {
-            DbHandler dbHandler = DbHandler.getInstance();
+            DbHandler dbHandler = DbHandler.getInstanceWithName(this.dbName);
             dbHandler.setComplete(id, false);
         } catch (SQLException e) {
             e.printStackTrace();
@@ -99,7 +99,7 @@ public class TaskManager extends Manager {
     public void showTasks() {
         Map<Integer, Task> tasks;
         try {
-            tasks = DbHandler.getInstance().getAllTasks();
+            tasks = DbHandler.getInstanceWithName(this.dbName).getAllTasks();
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }

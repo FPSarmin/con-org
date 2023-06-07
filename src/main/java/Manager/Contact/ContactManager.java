@@ -23,12 +23,21 @@ import static java.util.Objects.isNull;
 
 public class ContactManager extends Manager {
 
+    private String dbName;
+
+    public ContactManager() {
+        this.dbName = "jdbc:sqlite:conOrg.db";
+    }
+    public ContactManager(String dbName) {
+        this.dbName = dbName;
+    }
+
     @Override
     public void setPageSize(int size) {
         pageSize = size;
         Map<Integer, Task> contacts;
         try {
-            contacts = TaskManager.DbHandler.getInstance().getAllTasks();
+            contacts = TaskManager.DbHandler.getInstanceWithName(this.dbName).getAllTasks();
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -36,7 +45,7 @@ public class ContactManager extends Manager {
     }
     public void addContact(String name, String phoneNumber, String email, String address) throws ArithmeticException {
         try {
-            DbHandler dbHandler = DbHandler.getInstance();
+            DbHandler dbHandler = DbHandler.getInstanceWithName(this.dbName);
             dbHandler.addContact(new Contact(name, phoneNumber, email, address));
         } catch (SQLException e) {
             e.printStackTrace();
@@ -45,7 +54,7 @@ public class ContactManager extends Manager {
 
     public Contact getContact(int id) {
         try {
-            DbHandler dbHandler = DbHandler.getInstance();
+            DbHandler dbHandler = DbHandler.getInstanceWithName(this.dbName);
             return dbHandler.getContact(id);
         } catch (SQLException e) {
             e.printStackTrace();
@@ -55,7 +64,7 @@ public class ContactManager extends Manager {
 
     public Contact getContactByName(String name) {
         try {
-            DbHandler dbHandler = DbHandler.getInstance();
+            DbHandler dbHandler = DbHandler.getInstanceWithName(this.dbName);
             return dbHandler.getContactByName(name);
         } catch (SQLException e) {
             e.printStackTrace();
@@ -65,7 +74,7 @@ public class ContactManager extends Manager {
 
     public void removeContact(int id) {
         try {
-            DbHandler dbHandler = DbHandler.getInstance();
+            DbHandler dbHandler = DbHandler.getInstanceWithName(this.dbName);
             dbHandler.deleteContact(id);
         } catch (SQLException e) {
             e.printStackTrace();
@@ -83,7 +92,7 @@ public class ContactManager extends Manager {
             prevPage();
         }
         try {
-            DbHandler dbHandler = DbHandler.getInstance();
+            DbHandler dbHandler = DbHandler.getInstanceWithName(this.dbName);
             dbHandler.deleteContactByName(name);
         } catch (SQLException e) {
             e.printStackTrace();
@@ -91,9 +100,9 @@ public class ContactManager extends Manager {
     }
 
     public int getSize() {
-        Map<Integer, Task> contacts;
+        Map<Integer, Contact> contacts;
         try {
-            contacts = TaskManager.DbHandler.getInstance().getAllTasks();
+            contacts = DbHandler.getInstanceWithName(this.dbName).getAllContacts();
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -103,7 +112,7 @@ public class ContactManager extends Manager {
     public void showContacts() {
         Map<Integer, Contact> contacts;
         try {
-            contacts = DbHandler.getInstance().getAllContacts();
+            contacts = DbHandler.getInstanceWithName(this.dbName).getAllContacts();
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -133,11 +142,23 @@ public class ContactManager extends Manager {
             return instance;
         }
 
+        public static synchronized DbHandler getInstanceWithName(String dbName) throws SQLException {
+            if (instance == null)
+                instance = new DbHandler(dbName);
+            return instance;
+        }
+
         private final Connection connection;
 
         private DbHandler() throws SQLException {
             DriverManager.registerDriver(new JDBC());
             this.connection = DriverManager.getConnection(CON_STR);
+            CreateDB();
+        }
+
+        private DbHandler(String dbName) throws SQLException {
+            DriverManager.registerDriver(new JDBC());
+            this.connection = DriverManager.getConnection(dbName);
             CreateDB();
         }
 
