@@ -49,6 +49,21 @@ public class TaskManager extends Manager {
         }
     }
 
+    public void addTask(String description, Date deadline, int priority, String category) throws ArithmeticException {
+        try {
+            DbHandler dbHandler = DbHandler.getInstanceWithName(this.dbName);
+            dbHandler.addTask(new Task(description, deadline, priority, category));
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        int numTasks = getSize();
+        if (numPages == 1) {
+            ++pageSize;
+        } else if ((numTasks % pageSize == 1) || (pageSize == 1)) {
+            ++numPages;
+        }
+    }
+
     public int getSize() {
         try {
             DbHandler dbHandler = DbHandler.getInstanceWithName(this.dbName);
@@ -123,12 +138,63 @@ public class TaskManager extends Manager {
         try {
             tasks = DbHandler.getInstanceWithName(this.dbName).getAllTasks();
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            System.out.println("Something went wrong");
+            return;
         }
         if (tasks.size() - (showComplete ? 0 : 1) * numComplete == 0) {
             System.out.println("No tasks scheduled yet (or probably complete tasks display is toggled OFF)");
             return;
         }
+        showTasksFromMap(tasks);
+    }
+
+    public void showByDate(Date date) {
+        Map<Integer, Task> tasks;
+        try {
+            tasks = DbHandler.getInstanceWithName(this.dbName).getAllTasksByDate(date);
+        } catch (SQLException e) {
+            System.out.println("Something went wrong");
+            return;
+        }
+        int end = tasks.size();
+        if (end - (showComplete ? 0 : 1) * numComplete == 0) {
+            System.out.println("No tasks scheduled yet (or probably complete tasks display is toggled OFF)");
+            return;
+        }
+        Integer[] ids = new Integer[end];
+        tasks.keySet().toArray(ids);
+        Arrays.sort(ids, Comparator.comparingInt((Integer fst) -> tasks.get(fst).getPriority())
+                .thenComparing(fst -> tasks.get(fst).getDescription()));
+        for (int i = 0; i < end; ++i) {
+            if (i == 0) {
+                System.out.println(StringUtils.repeat("#", 70));
+            }
+            Task currTask = tasks.get(ids[i]);
+            if (currTask.isComplete() && !showComplete) {
+                continue;
+            }
+            currTask.display();
+            System.out.println(StringUtils.repeat("#", 70));
+        }
+    }
+
+    public void showByCategory(String category) {
+        Map<Integer, Task> tasks;
+        try {
+            tasks = DbHandler.getInstanceWithName(this.dbName).getAllTasksByCategory(category);
+        } catch (SQLException e) {
+            System.out.println("Something went wrong");
+            return;
+        }
+        int end = tasks.size();
+        if (end - (showComplete ? 0 : 1) * numComplete == 0) {
+            System.out.println("No tasks scheduled yet (or probably complete tasks display is toggled OFF)");
+            return;
+        }
+        showTasksFromMap(tasks);
+    }
+
+    private void showTasksFromMap(Map<Integer, Task> tasks) {
         Integer[] keys = new Integer[tasks.size()];
         tasks.keySet().toArray(keys);
         Arrays.sort(keys, (fst, snd) -> {
@@ -160,34 +226,6 @@ public class TaskManager extends Manager {
         System.out.printf("Page %d of %d | %d elements\n", currPage+1, numPages, currPage == numPages-1 ? (lastPageEls == 0 ? pageSize : lastPageEls): pageSize);
     }
 
-    public void showByDate(Date date) {
-        Map<Integer, Task> tasks;
-        try {
-            tasks = DbHandler.getInstanceWithName(this.dbName).getAllTasksByDate(date);
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-        int end = tasks.size();
-        if (end - (showComplete ? 0 : 1) * numComplete == 0) {
-            System.out.println("No tasks scheduled yet (or probably complete tasks display is toggled OFF)");
-            return;
-        }
-        Integer[] ids = new Integer[end];
-        tasks.keySet().toArray(ids);
-        Arrays.sort(ids, Comparator.comparingInt((Integer fst) -> tasks.get(fst).getPriority())
-                .thenComparing(fst -> tasks.get(fst).getDescription()));
-        for (int i = 0; i < end; ++i) {
-            if (i == 0) {
-                System.out.println(StringUtils.repeat("#", 70));
-            }
-            Task currTask = tasks.get(ids[i]);
-            if (currTask.isComplete() && !showComplete) {
-                continue;
-            }
-            currTask.display();
-            System.out.println(StringUtils.repeat("#", 70));
-        }
-    }
     public static class DbHandler {
 
         // Константа, в которой хранится адрес подключения
@@ -224,7 +262,7 @@ public class TaskManager extends Manager {
         }
         public Task getTask(int id) throws SQLException {
             try (PreparedStatement statement = this.connection.prepareStatement(
-                    "SELECT id, description, deadline, complete, priority FROM Tasks WHERE id = ?")) {
+                    "SELECT id, description, deadline, complete, priority, category FROM Tasks WHERE id = ?")) {
                 statement.setObject(1, id);
                 ResultSet resultSet = statement.executeQuery();
                 if (!resultSet.next()) {
@@ -235,7 +273,8 @@ public class TaskManager extends Manager {
                         resultSet.getString("description"),
                         resultSet.getDate("deadline"),
                         resultSet.getBoolean("complete"),
-                        resultSet.getInt("priority")
+                        resultSet.getInt("priority"),
+                        resultSet.getString("category")
                 );
             } catch (SQLException e) {
                 e.printStackTrace();
@@ -278,23 +317,11 @@ public class TaskManager extends Manager {
 
         public Map<Integer, Task> getAllTasksByDate(Date date) {
             try (PreparedStatement statement = this.connection.prepareStatement(
-                    "SELECT id, description, deadline, complete, priority FROM Tasks " +
+                    "SELECT id, description, deadline, complete, priority, category FROM Tasks " +
                             "WHERE deadline>= ? AND deadline < ?")) {
                 statement.setTimestamp(1, new java.sql.Timestamp(date.getTime()));
                 statement.setTimestamp(2, new java.sql.Timestamp(date.getTime() + 24L*60*60*60*1000));
-                Map<Integer, Task> tasks = new HashMap<>();
-                ResultSet resultSet = statement.executeQuery();
-                while (resultSet.next()) {
-                    tasks.put(resultSet.getInt("id"),
-                            new Task(
-                                    resultSet.getInt("id"),
-                                    resultSet.getString("description"),
-                                    resultSet.getTimestamp("deadline"),
-                                    resultSet.getBoolean("complete"),
-                                    resultSet.getInt("priority")
-                            ));
-                }
-                return tasks;
+                return getIntegerTaskMap(statement);
 
             } catch (SQLException e) {
                 e.printStackTrace();
@@ -302,9 +329,39 @@ public class TaskManager extends Manager {
             }
         }
 
+        public Map<Integer, Task> getAllTasksByCategory(String category) {
+            try (PreparedStatement statement = this.connection.prepareStatement(
+                    "SELECT id, description, deadline, complete, priority, category FROM Tasks " +
+                            "WHERE category=?")) {
+                statement.setString(1, category);
+                return getIntegerTaskMap(statement);
+
+            } catch (SQLException e) {
+                e.printStackTrace();
+                return Collections.emptyMap();
+            }
+        }
+
+        private Map<Integer, Task> getIntegerTaskMap(PreparedStatement statement) throws SQLException {
+            Map<Integer, Task> tasks = new HashMap<>();
+            ResultSet resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                tasks.put(resultSet.getInt("id"),
+                        new Task(
+                                resultSet.getInt("id"),
+                                resultSet.getString("description"),
+                                resultSet.getTimestamp("deadline"),
+                                resultSet.getBoolean("complete"),
+                                resultSet.getInt("priority"),
+                                resultSet.getString("category")
+                        ));
+            }
+            return tasks;
+        }
+
         public void CreateDB() {
             try (Statement statement = this.connection.createStatement()) {
-                statement.execute("CREATE TABLE if not exists 'Tasks' ('id' INTEGER PRIMARY KEY AUTOINCREMENT, 'description' text, 'deadline' Timestamp, 'complete' BOOLEAN, 'priority' INTEGER);");
+                statement.execute("CREATE TABLE if not exists 'Tasks' ('id' INTEGER PRIMARY KEY AUTOINCREMENT, 'description' text, 'deadline' Timestamp, 'complete' BOOLEAN, 'priority' INTEGER, 'category' text);");
             }
             catch (SQLException e) {
                 e.printStackTrace();
@@ -316,12 +373,13 @@ public class TaskManager extends Manager {
         public void addTask(Task task) {
             // Создадим подготовленное выражение, чтобы избежать SQL-инъекций
             try (PreparedStatement statement = this.connection.prepareStatement(
-                    "INSERT INTO Tasks('description', 'deadline', 'complete', 'priority') " +
-                            "VALUES(?, ?, ?, ?)")) {
+                    "INSERT INTO Tasks('description', 'deadline', 'complete', 'priority', 'category') " +
+                            "VALUES(?, ?, ?, ?, ?)")) {
                 statement.setObject(1, task.getDescription());
                 statement.setObject(2, task.getDeadline());
                 statement.setObject(3, task.isComplete());
                 statement.setObject(4, task.getPriority());
+                statement.setObject(5, task.getCategory());
                 statement.execute();
             } catch (SQLException e) {
                 e.printStackTrace();

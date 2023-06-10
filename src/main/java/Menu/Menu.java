@@ -48,12 +48,12 @@ public class Menu {
             String menuCommands = """
                     ==============================================================================
                     == Available commands:       1.showAll, 2.showByDate, 3.addTask, 4.editTask ==
-                    ==                                    5.removeTask, 6.toggleCompleteDisplay ==
-                    ==                          7.nextPage, 8.editPageSize, 9.prevPage, 10.menu ==
+                    ==                      5.removeTask, 6.toggleCompleteDisplay, 7.nextPage,  ==
+                    ==                        8.editPageSize, 9.prevPage, 10. showByCat 11.menu ==
                     ==============================================================================
                     """;
             System.out.print(menuCommands);
-            if ((command = scanner.nextLine()).equals("10")) {
+            if ((command = scanner.nextLine()).equals("11")) {
                 return;
             }
             switch (command) {
@@ -66,6 +66,7 @@ public class Menu {
                 case "7" -> tm.nextPage();
                 case "8" -> editPageSize();
                 case "9" -> tm.prevPage();
+                case "10" -> tm.showByCategory(getCategory());
                 default -> System.out.println("Unknown command");
             }
             tm.menuReturn();
@@ -74,14 +75,22 @@ public class Menu {
 
     public void addTask() throws InterruptedException {
         clearScreen();
+        System.out.print("Enter category: ");
+        String category = scanner.nextLine();
         System.out.print("Enter description: ");
         String description = scanner.nextLine();
         Date deadline = editDeadline(FORMATTER);
         System.out.print("Enter priority: ");
         int priority = Integer.parseInt(scanner.nextLine());
-        tm.addTask(description, deadline, priority);
+        tm.addTask(description, deadline, priority, category);
         System.out.println("Task added");
         Thread.sleep(2 * 1000); // Wait for 2 seconds
+    }
+
+    public String getCategory() {
+        clearScreen();
+        System.out.print("Enter category: ");
+        return scanner.nextLine();
     }
     public void editTask() {
         clearScreen();
