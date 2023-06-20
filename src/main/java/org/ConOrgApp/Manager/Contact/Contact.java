@@ -65,12 +65,12 @@ public class Contact {
     }
 
     public void display() {
-        System.out.println(StringUtils.repeat("#", 70));
-        System.out.printf("## Id           :%s%s ##\n", StringUtils.repeat(' ', 50-Integer.toString(id).length()), Integer.toString(id));
-        System.out.printf("## Name         :%s%s ##\n", StringUtils.repeat(' ', 50-name.length()), name);
-        System.out.printf("## Phone Number :%s%s ##\n", StringUtils.repeat(' ', 50-phoneNumber.length()), phoneNumber);
-        System.out.printf("## Email        :%s%s ##\n", StringUtils.repeat(' ', 50-email.length()), email);
-        System.out.printf("## Address      :%s%s ##\n", StringUtils.repeat(' ', 50-address.length()), address);
-        System.out.println(StringUtils.repeat("#", 70));
+        System.out.println(StringUtils.repeat("#", 78));
+        System.out.printf("## Id           :%s%s ##\n", StringUtils.repeat(' ', 58-Integer.toString(id).length()), Integer.toString(id));
+        System.out.printf("## Name         :%s%s ##\n", StringUtils.repeat(' ', 58-name.length()), name);
+        System.out.printf("## Phone Number :%s%s ##\n", StringUtils.repeat(' ', 58-phoneNumber.length()), phoneNumber);
+        System.out.printf("## Email        :%s%s ##\n", StringUtils.repeat(' ', 58-email.length()), email);
+        System.out.printf("## Address      :%s%s ##\n", StringUtils.repeat(' ', 58-address.length()), address);
+        System.out.println(StringUtils.repeat("#", 78));
     }
 }

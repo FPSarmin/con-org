@@ -128,7 +128,7 @@ public class ContactManager extends Manager {
         for (int i = start; i < end; ++i) {
             contacts.get(keys[i]).display();
             if (i < end - 1) {
-                System.out.println(StringUtils.repeat('=', 70));
+                System.out.println(StringUtils.repeat('=', 78));
             }
         }
     }
