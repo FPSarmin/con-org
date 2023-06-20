@@ -7,7 +7,7 @@ RUN mkdir -p $APP_HOME/src/main/java
 WORKDIR $APP_HOME
 COPY src src
 COPY pom.xml .
-RUN mvn -B package -e -X --file pom.xml -Dmaven.test.skip
+RUN mvn package --file pom.xml -Dmaven.test.skip
 
 FROM openjdk:17
 WORKDIR /root/
