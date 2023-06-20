@@ -226,28 +226,30 @@ public class Menu {
     public void openContactManager() throws InterruptedException {
         String command;
         while (true) {
+            clearScreen();
             String menuCommands = """
-                    ======================================================================
-                    == Available commands:       showAll, addContact, removeContactById ==
-                    ==                                              removeContactByName ==
-                    ======================================================================
+                    ==============================================================================
+                    == Available commands:          1.showAll, 2.addContact 3.removeContactById ==
+                    ==                                             4.removeContactByName 5.menu ==
+                    ==============================================================================
                     """;
             System.out.print(menuCommands);
-            if ((command = scanner.nextLine()).equals("menu")) {
-                return;
-            }
+            command = scanner.nextLine();
             switch (command) {
-                case "showAll" -> showAll("contacts");
-                case "addContact" -> addContact();
-                case "removeContactById" ->  removeContactById();
-                case "removeContactByName" -> removeContactByName();
+                case "1" -> showAll("contacts");
+                case "2" -> addContact();
+                case "3" ->  removeContactById();
+                case "4" -> removeContactByName();
+                case "5" -> {
+                    cm.menuReturn();
+                    return;
+                }
                 default -> System.out.print("Unknown command");
             }
-            cm.menuReturn();
         }
     }
 
-    private void addContact() {
+    private void addContact() throws InterruptedException {
         clearScreen();
         System.out.print("Enter name: ");
         String name = scanner.nextLine();
@@ -259,22 +261,24 @@ public class Menu {
         String address = scanner.nextLine();
         cm.addContact(name, number, email, address);
         System.out.print("Contact added\n");
-        scanner.nextLine();
+        Thread.sleep(2 * 1000); // Wait for 2 seconds
     }
 
-    private void removeContactById() {
+    private void removeContactById() throws InterruptedException {
         clearScreen();
         System.out.print("Enter contact id: ");
         String id = scanner.nextLine();
         cm.removeContact(Integer.parseInt(id));
-        scanner.nextLine();
+        System.out.println("Contact deleted");
+        Thread.sleep(2 * 1000); // Wait for 2 seconds
     }
 
-    private void removeContactByName() {
+    private void removeContactByName() throws InterruptedException {
         clearScreen();
         System.out.print("Enter contact name: ");
         String name = scanner.nextLine();
         cm.removeContactByName(name);
-        scanner.nextLine();
+        System.out.println("Contact deleted");
+        Thread.sleep(2 * 1000); // Wait for 2 seconds
     }
 }
