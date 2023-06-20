@@ -97,11 +97,11 @@ public class Task {
 
     public void display() {
         String isDone = StringUtils.repeat("YES", complete ? 1 : 0) + StringUtils.repeat("NO", complete ? 0 : 1);
-        System.out.printf("## Id          :%s%s ##\n", StringUtils.repeat(' ', 51-Integer.toString(id).length()), id);
-        System.out.printf("## Category    :%s%s ##\n", StringUtils.repeat(' ', 51-category.length()), category);
-        System.out.printf("## Description :%s%s ##\n", StringUtils.repeat(' ', 51-description.length()), description);
-        System.out.printf("## Deadline    :%s%s ##\n", StringUtils.repeat(' ', 51-deadline.toString().length()), deadline.toString());
-        System.out.printf("## Complete    :%s%s ##\n", StringUtils.repeat(' ', 51-isDone.length()), isDone);
-        System.out.printf("## Priority    :%s%s ##\n", StringUtils.repeat(' ', 51-Integer.toString(priority).length()), priority);
+        System.out.printf("## Id          :%s%s ##\n", StringUtils.repeat(' ', 59-Integer.toString(id).length()), id);
+        System.out.printf("## Category    :%s%s ##\n", StringUtils.repeat(' ', 59-category.length()), category);
+        System.out.printf("## Description :%s%s ##\n", StringUtils.repeat(' ', 59-description.length()), description);
+        System.out.printf("## Deadline    :%s%s ##\n", StringUtils.repeat(' ', 59-deadline.toString().length()), deadline.toString());
+        System.out.printf("## Complete    :%s%s ##\n", StringUtils.repeat(' ', 59-isDone.length()), isDone);
+        System.out.printf("## Priority    :%s%s ##\n", StringUtils.repeat(' ', 59-Integer.toString(priority).length()), priority);
     }
 }

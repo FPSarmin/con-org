@@ -44,8 +44,6 @@ public class TaskManager extends Manager {
         int numTasks = getSize();
         if (numPages == 1) {
             ++pageSize;
-        } else if ((numTasks % pageSize == 1) || (pageSize == 1)) {
-            ++numPages;
         }
     }
 
@@ -59,15 +57,13 @@ public class TaskManager extends Manager {
         int numTasks = getSize();
         if (numPages == 1) {
             ++pageSize;
-        } else if ((numTasks % pageSize == 1) || (pageSize == 1)) {
-            ++numPages;
         }
     }
 
     public int getSize() {
         try {
             DbHandler dbHandler = DbHandler.getInstanceWithName(this.dbName);
-            return dbHandler.getSize();
+            return dbHandler.getSize(showComplete);
         } catch (SQLException e) {
             e.printStackTrace();
             return 0;
@@ -94,11 +90,6 @@ public class TaskManager extends Manager {
         int numTasks = getSize();
         if (numPages == 1) {
             --pageSize;
-        } else if (numTasks % pageSize == 0) {
-            --numPages;
-            if (currPage == numPages) {
-                prevPage();
-            }
         }
     }
     public Task selectTask(int id) {
@@ -161,21 +152,7 @@ public class TaskManager extends Manager {
             System.out.println("No tasks scheduled yet (or probably complete tasks display is toggled OFF)");
             return;
         }
-        Integer[] ids = new Integer[end];
-        tasks.keySet().toArray(ids);
-        Arrays.sort(ids, Comparator.comparingInt((Integer fst) -> tasks.get(fst).getPriority())
-                .thenComparing(fst -> tasks.get(fst).getDescription()));
-        for (int i = 0; i < end; ++i) {
-            if (i == 0) {
-                System.out.println(StringUtils.repeat("#", 70));
-            }
-            Task currTask = tasks.get(ids[i]);
-            if (currTask.isComplete() && !showComplete) {
-                continue;
-            }
-            currTask.display();
-            System.out.println(StringUtils.repeat("#", 70));
-        }
+        showTasksFromMap(tasks);
     }
 
     public void showByCategory(String category) {
@@ -195,6 +172,14 @@ public class TaskManager extends Manager {
     }
 
     private void showTasksFromMap(Map<Integer, Task> tasks) {
+        if (numPages == 1) {
+            pageSize = tasks.size();
+        } else {
+            numPages = tasks.size() / pageSize + (tasks.size() % pageSize == 0 ? 0 : 1);
+        }
+        if (currPage >= numPages) {
+            currPage = numPages - 1;
+        }
         Integer[] keys = new Integer[tasks.size()];
         tasks.keySet().toArray(keys);
         Arrays.sort(keys, (fst, snd) -> {
@@ -213,15 +198,15 @@ public class TaskManager extends Manager {
         int lastPageEls = tasks.size() % pageSize;
         System.out.printf("Page %d of %d | %d elements\n", currPage+1, numPages, currPage == numPages-1 ? (lastPageEls == 0 ? pageSize : lastPageEls): pageSize);
         for (int i = start; i < end; ++i) {
-            if (i == 0) {
-                System.out.println(StringUtils.repeat("#", 70));
+            if (i == start) {
+                System.out.print(StringUtils.repeat("#", 78) + "\n");
             }
             Task currTask = tasks.get(keys[i]);
             if (currTask.isComplete() && !showComplete) {
                 continue;
             }
             currTask.display();
-            System.out.println(StringUtils.repeat("#", 70));
+            System.out.print(StringUtils.repeat("#", 78) + "\n");
         }
         System.out.printf("Page %d of %d | %d elements\n", currPage+1, numPages, currPage == numPages-1 ? (lastPageEls == 0 ? pageSize : lastPageEls): pageSize);
     }
@@ -397,9 +382,14 @@ public class TaskManager extends Manager {
             }
         }
 
-        public int getSize() {
+        public int getSize(boolean showComplete) {
             try (Statement statement = this.connection.createStatement()) {
-                ResultSet result = statement.executeQuery("SELECT count(*) FROM Tasks");
+                ResultSet result;
+                if (showComplete) {
+                    result = statement.executeQuery("SELECT count(*) FROM Tasks");
+                } else {
+                    result = statement.executeQuery("SELECT count(*) FROM Tasks WHERE complete = 0");
+                }
                 return result.getInt(1);
             } catch (SQLException e) {
                 e.printStackTrace();
