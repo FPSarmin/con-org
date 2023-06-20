@@ -1,8 +1,6 @@
-package Manager.Contact;
+package org.ConOrgApp.Manager.Contact;
 
-import Manager.Manager;
-import Manager.Task.Task;
-import Manager.Task.TaskManager;
+import org.ConOrgApp.Manager.Manager;
 import org.apache.commons.lang3.StringUtils;
 import org.sqlite.JDBC;
 
@@ -12,11 +10,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import static java.util.Objects.isNull;
@@ -143,7 +138,7 @@ public class ContactManager extends Manager {
         private static final String CON_STR = "jdbc:sqlite:conOrg.db";
 
         // Используем шаблон одиночка, чтобы не плодить множество
-        // экземпляров класса DbHandler
+        // экземпляров класса org.ConOrgApp.DbHandler
         private static DbHandler instance = null;
 
         public static synchronized DbHandler getInstance() throws SQLException {

@@ -1,6 +1,6 @@
-package Manager.Task;
+package org.ConOrgApp.Manager.Task;
 
-import Manager.Manager;
+import org.ConOrgApp.Manager.Manager;
 import org.apache.commons.lang3.StringUtils;
 import org.sqlite.JDBC;
 
@@ -232,7 +232,7 @@ public class TaskManager extends Manager {
         private static final String CON_STR = "jdbc:sqlite:conOrg.db";
 
         // Используем шаблон одиночка, чтобы не плодить множество
-        // экземпляров класса DbHandler
+        // экземпляров класса org.ConOrgApp.DbHandler
         private static DbHandler instance = null;
 
         public static synchronized DbHandler getInstance() throws SQLException {
@@ -296,7 +296,7 @@ public class TaskManager extends Manager {
         public Map<Integer, Task> getAllTasks() {
             try (Statement statement = this.connection.createStatement()) {
                 Map<Integer, Task> tasks = new HashMap<>();
-                ResultSet resultSet = statement.executeQuery("SELECT id, description, deadline, complete, priority FROM Tasks");
+                ResultSet resultSet = statement.executeQuery("SELECT id, description, deadline, complete, priority, category FROM Tasks");
                 while (resultSet.next()) {
                     tasks.put(resultSet.getInt("id"),
                             new Task(
@@ -304,7 +304,8 @@ public class TaskManager extends Manager {
                                     resultSet.getString("description"),
                                     resultSet.getTimestamp("deadline"),
                                     resultSet.getBoolean("complete"),
-                                    resultSet.getInt("priority")
+                                    resultSet.getInt("priority"),
+                                    resultSet.getString("category")
                     ));
                 }
                 return tasks;

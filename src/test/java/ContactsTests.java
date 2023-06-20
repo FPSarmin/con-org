@@ -1,5 +1,5 @@
-import Manager.Contact.Contact;
-import Manager.Contact.ContactManager;
+import org.ConOrgApp.Manager.Contact.Contact;
+import org.ConOrgApp.Manager.Contact.ContactManager;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
@@ -56,7 +56,7 @@ public class ContactsTests {
     ContactManager cm = new ContactManager("jdbc:sqlite:TestConOrg.db");
 
     @Test
-    @DisplayName("Test Contact Manager")
+    @DisplayName("Test Contact org.ConOrgApp.Manager.Manager")
     public void AddContacts() {
         // Check getSize, addContact, getContact by Id/Name
         assertEquals(cm.getSize(), 0);

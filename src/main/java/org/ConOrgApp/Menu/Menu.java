@@ -1,8 +1,8 @@
-package Menu;
+package org.ConOrgApp.Menu;
 
-import Manager.Contact.ContactManager;
-import Manager.Task.Task;
-import Manager.Task.TaskManager;
+import org.ConOrgApp.Manager.Contact.ContactManager;
+import org.ConOrgApp.Manager.Task.Task;
+import org.ConOrgApp.Manager.Task.TaskManager;
 import org.apache.commons.lang3.StringUtils;
 
 import java.text.ParseException;

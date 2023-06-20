@@ -1,4 +1,4 @@
-package Manager;
+package org.ConOrgApp.Manager;
 
 abstract public class Manager {
     protected int numPages = 1;

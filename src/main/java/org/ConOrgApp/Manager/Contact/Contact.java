@@ -1,4 +1,4 @@
-package Manager.Contact;
+package org.ConOrgApp.Manager.Contact;
 
 import org.apache.commons.lang3.StringUtils;
 

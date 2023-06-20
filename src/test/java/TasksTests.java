@@ -1,5 +1,5 @@
-import Manager.Task.Task;
-import Manager.Task.TaskManager;
+import org.ConOrgApp.Manager.Task.Task;
+import org.ConOrgApp.Manager.Task.TaskManager;
 
 import java.io.File;
 import java.text.ParseException;

@@ -1,4 +1,4 @@
-package Manager.Task;
+package org.ConOrgApp.Manager.Task;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -11,21 +11,19 @@ public class Task {
     private Boolean complete = Boolean.FALSE;
     private int priority;
 
-    private String category;
+    private String category = "default";
 
     public Task(int id, String description, Date deadline, int priority) {
         this.id = id;
         this.description = description;
         this.deadline = deadline;
         this.priority = priority;
-        this.category = "default";
     }
 
     public Task(String description, Date deadline, int priority) {
         this.description = description;
         this.deadline = deadline;
         this.priority = priority;
-        this.category = "default";
     }
 
     public Task(String description, Date deadline, int priority, String category) {
@@ -33,7 +31,6 @@ public class Task {
         this.deadline = deadline;
         this.priority = priority;
         this.category = category;
-
     }
 
     public Task(int id, String description, Date deadline, boolean complete, int priority, String category) {
