@@ -3,7 +3,7 @@ name: maven
 on:
   push:
     # при push в master
-    branches: [ master ]
+    branches: [ main ]
 
 jobs:
   build:
