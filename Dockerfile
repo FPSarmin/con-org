@@ -11,5 +11,8 @@ RUN mvn -B package -e -X --file pom.xml
 
 FROM openjdk:17
 WORKDIR /root/
+RUN rm -rf /etc/localtime
+RUN ln -s /usr/share/zoneinfo/Europe/Moscow /etc/localtime
+RUN echo "Europe/Moscow" > /etc/timezone
 COPY --from=BUILD_IMAGE /root/dev/myapp/target .
 CMD java -jar conOrg.jar
