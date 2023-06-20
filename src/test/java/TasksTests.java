@@ -106,11 +106,21 @@ public class TasksTests {
         tm.markComplete(1);
         Task task = tm.getTask(1);
         assertTrue(task.isComplete());
+
+        assertEquals(2, tm.getSize());
+        tm.toggleComplete();
+        assertEquals(1, tm.getSize());
+
         task = tm.getTask(2);
         assertFalse(task.isComplete());
         tm.markComplete(2);
         task = tm.getTask(2);
         assertTrue(task.isComplete());
+
+        assertEquals(0, tm.getSize());
+        tm.toggleComplete();
+        assertEquals(2, tm.getSize());
+
         tm.markIncomplete(2);
         task = tm.getTask(2);
         assertFalse(task.isComplete());
@@ -138,20 +148,24 @@ public class TasksTests {
 
         // Check size changes on add in case numPages == 1
         tm.addTask("Minor", new Date(1686064200000L + 24L*60L*60L*1000L*2L), 3);
+        tm.showTasks();
         assertEquals(3, tm.getSize());
 
         // Check setPageSize changes pageSize correctly
         tm.setPageSize(2);
+        tm.showTasks();
         assertEquals(2, tm.getNumPages());
         assertEquals(2, tm.getPageSize());
         assertEquals(0, tm.getCurrPage());
 
         // Check nextPage
         tm.nextPage();
+        tm.showTasks();
         assertEquals(1, tm.getCurrPage());
 
         // Check if last page is clear it is removed
         tm.removeTask(3);
+        tm.showTasks();
         assertEquals(1, tm.getNumPages());
         assertEquals(2, tm.getPageSize());
 
