@@ -228,10 +228,10 @@ public class Menu {
         while (true) {
             clearScreen();
             String menuCommands = """
-                    ======================================================================
-                    == Available commands:  1.showAll, 2.addContact 3.removeContactById ==
-                    ==                                     4.removeContactByName 5.menu ==
-                    ======================================================================
+                    ==============================================================================
+                    == Available commands:          1.showAll, 2.addContact 3.removeContactById ==
+                    ==                                             4.removeContactByName 5.menu ==
+                    ==============================================================================
                     """;
             System.out.print(menuCommands);
             command = scanner.nextLine();
